@@ -7,12 +7,26 @@ export default {
   theme: {
     extend: {
       colors: {
+        canvas: {
+          DEFAULT: "#09090b",
+          subtle: "#121215",
+          panel: "#18181b",
+          hover: "#222226",
+        },
+        border: {
+          subtle: "#27272a",
+          strong: "#3f3f46",
+          focus: "#3b82f6",
+        },
         zoho: {
-          blue: "#0070ba",
-          red: "#f15a24",
-          green: "#009688",
-          dark: "#1e293b",
+          blue: "#0066cc",
+          accent: "#2563eb",
+          hover: "#1d4ed8",
         }
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'Menlo', 'monospace'],
       }
     },
   },
