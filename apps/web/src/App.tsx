@@ -1,16 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
+import { Navbar, ActiveTab } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
 import { FileUpload } from './components/FileUpload';
 import { ProfilingReport } from './components/ProfilingReport';
 import { RecordPreview } from './components/RecordPreview';
+import { MetadataExplorer } from './components/MetadataExplorer';
+import { MappingEngineView } from './components/MappingEngineView';
+import { TransformationView } from './components/TransformationView';
+import { ValidationView } from './components/ValidationView';
+import { MigrationConsole } from './components/MigrationConsole';
 import { CreateProjectModal } from './components/CreateProjectModal';
 import { fetchProjects, fetchSourceProfile } from './services/api';
 import { MigrationProject, SourceProfile } from './types';
 import { AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'profiling' | 'preview'>('dashboard');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [projects, setProjects] = useState<MigrationProject[]>([]);
   const [activeProject, setActiveProject] = useState<MigrationProject | null>(null);
   const [currentProfile, setCurrentProfile] = useState<SourceProfile | null>(null);
@@ -27,7 +32,6 @@ export function App() {
       setProjects(data);
       if (data.length > 0 && !activeProject) {
         setActiveProject(data[0]);
-        // If the first project has files, fetch the profile of the first file
         if (data[0].source_files && data[0].source_files.length > 0) {
           loadProfile(data[0].source_files[0].id);
         }
@@ -66,12 +70,7 @@ export function App() {
       setPreviewSheetName(profile.sheets[0].sheet_name);
     }
     setActiveTab('profiling');
-    loadProjects(); // refresh projects to show updated status
-  };
-
-  const handlePreviewSheet = (sheetName: string) => {
-    setPreviewSheetName(sheetName);
-    setActiveTab('preview');
+    loadProjects();
   };
 
   return (
@@ -80,6 +79,7 @@ export function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         projectName={activeProject?.name}
+        targetProduct={activeProject?.target_product}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -106,6 +106,7 @@ export function App() {
           </div>
         )}
 
+        {/* Tab 1: Dashboard */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
             <Dashboard
@@ -125,12 +126,16 @@ export function App() {
           </div>
         )}
 
+        {/* Tab 2: Profiling Report */}
         {activeTab === 'profiling' && (
           <div>
             {currentProfile ? (
               <ProfilingReport
                 profile={currentProfile}
-                onPreviewSheet={handlePreviewSheet}
+                onPreviewSheet={(sheetName) => {
+                  setPreviewSheetName(sheetName);
+                  setActiveTab('preview');
+                }}
               />
             ) : (
               <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center text-slate-500 text-xs">
@@ -140,6 +145,7 @@ export function App() {
           </div>
         )}
 
+        {/* Tab 3: Record Explorer */}
         {activeTab === 'preview' && (
           <div>
             {currentProfile ? (
@@ -154,6 +160,43 @@ export function App() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Tab 4: Target Metadata Explorer */}
+        {activeTab === 'metadata' && activeProject && (
+          <MetadataExplorer
+            projectId={activeProject.id}
+            targetProduct={activeProject.target_product}
+          />
+        )}
+
+        {/* Tab 5: Schema Mapping */}
+        {activeTab === 'mapping' && activeProject && (
+          <MappingEngineView
+            projectId={activeProject.id}
+            targetProduct={activeProject.target_product}
+          />
+        )}
+
+        {/* Tab 6: Transformations */}
+        {activeTab === 'transformation' && activeProject && (
+          <TransformationView projectId={activeProject.id} />
+        )}
+
+        {/* Tab 7: Pre-Flight Validation & Dependencies */}
+        {activeTab === 'validation' && activeProject && (
+          <ValidationView
+            projectId={activeProject.id}
+            fileId={currentProfile?.file_id}
+          />
+        )}
+
+        {/* Tab 8: Export & Direct Migration Console */}
+        {activeTab === 'migration' && activeProject && (
+          <MigrationConsole
+            projectId={activeProject.id}
+            targetProduct={activeProject.target_product}
+          />
         )}
       </main>
 
